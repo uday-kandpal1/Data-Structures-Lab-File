@@ -1,0 +1,83 @@
+history = [] 
+forward_stack = []  # Stack for redo functionality
+site_frequency = {}  # Dictionary to track frequency of each site
+def visit_page(page): 
+    history.append(page)  
+    forward_stack.clear()  
+    # Update frequency count
+    if page in site_frequency:
+        site_frequency[page] += 1
+    else:
+        site_frequency[page] = 1       
+    print(f"Visited: {page}") 
+def go_back(): 
+    if not history: 
+        print("No pages in history.") 
+        return 
+    last_page = history.pop()  
+    forward_stack.append(last_page)  
+    print(f"Going back from: {last_page}") 
+    if history: 
+        print(f"Current page: {history[-1]}") 
+    else: 
+        print("No pages left in history.") 
+def go_forward():
+    if not forward_stack:
+        print("Cannot go forward. No pages in forward history.")
+        return
+    next_page = forward_stack.pop()  # Pop from forward stack
+    history.append(next_page)  # Add back to history   
+    print(f"Going forward to: {next_page}")
+    print(f"Current page: {next_page}")
+def show_history(): 
+    if not history: 
+        print("History is empty.") 
+    else: 
+        print("History:", " -> ".join(history)) 
+def show_forward_stack():
+    if not forward_stack:
+        print("Forward history is empty.")
+    else:
+        print("Forward history (redo available):", " -> ".join(forward_stack))
+def show_frequency():
+    if not site_frequency:
+        print("No sites visited yet.")
+        return        
+    print("\n--- Site Frequency ---")
+    # Sort by frequency (descending) and then by site name (ascending)
+    sorted_sites = sorted(site_frequency.items(), key=lambda x: (-x[1], x[0]))   
+    for site, count in sorted_sites:
+        print(f"{site}: {count} time{'s' if count > 1 else ''}")
+    print("---------------------")
+# ---------------- Menu ---------------- 
+while True: 
+    print("\nBrowser Simulation Menu:") 
+    print("1. Visit Page") 
+    print("2. Back") 
+    print("3. Forward (Redo)") 
+    print("4. Show History") 
+    print("5. Show Forward History")
+    print("6. Show Site Frequency")
+    print("7. Exit")     
+    choice = input("Enter choice: ")     
+    if choice == "1": 
+        page = input("Enter page name: ").strip()
+        if page:
+            visit_page(page) 
+        else:
+            print("Page name cannot be empty.")
+    elif choice == "2": 
+        go_back() 
+    elif choice == "3": 
+        go_forward()
+    elif choice == "4": 
+        show_history() 
+    elif choice == "5":
+        show_forward_stack()
+    elif choice == "6":
+        show_frequency()
+    elif choice == "7": 
+        print("Exiting browser simulation.") 
+        break 
+    else: 
+        print("Invalid choice. Please enter a number between 1 and 7.")
