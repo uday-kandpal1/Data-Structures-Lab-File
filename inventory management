@@ -1,0 +1,220 @@
+def process_sale(inventory, sku, qty_sold):
+    """
+    Decrease stock of specific SKU based on sales.
+    If SKU not found, notify user.
+    If stock is insufficient, notify user.
+    Moves zero stock items to the end of inventory.
+
+    Args:
+    inventory (list of tuples): [(SKU, quantity), ...]
+    sku (int): SKU identifier to process sale
+    qty_sold (int): Quantity sold
+    Returns:
+    updated_inventory (list of tuples) with zero stock items at the end
+    """
+    updated_inventory = []
+    sku_found = False
+    zero_stock_items = []
+
+    for item in inventory:
+        current_sku, current_qty = item
+        if current_sku == sku:
+            sku_found = True
+            if current_qty >= qty_sold:
+                new_qty = current_qty - qty_sold
+                if new_qty == 0:
+                    zero_stock_items.append((current_sku, new_qty))
+                    print(f"✓ Sale processed: {qty_sold} units of SKU {sku}. Item is now out of stock.")
+                else:
+                    updated_inventory.append((current_sku, new_qty))
+                    print(f"✓ Sale processed: {qty_sold} units of SKU {sku}. Remaining: {new_qty}")
+            else:
+                updated_inventory.append((current_sku, current_qty))
+                print(f"✗ Insufficient stock for SKU {sku}. Available: {current_qty}, Requested: {qty_sold}")
+        else:
+            # Check if this non-target item has zero stock
+            if current_qty == 0:
+                zero_stock_items.append((current_sku, current_qty))
+            else:
+                updated_inventory.append((current_sku, current_qty))
+
+    if not sku_found:
+        print(f"✗ SKU {sku} not found in inventory.")
+
+    # Add zero stock items at the end
+    updated_inventory.extend(zero_stock_items)
+    
+    return updated_inventory
+
+def identify_zero_stock(inventory):
+    """
+    Identify all SKUs with zero stock and return them separately.
+
+    Args:
+    inventory (list of tuples): [(SKU, quantity), ...]
+    Returns:
+    tuple: (non_zero_inventory, zero_stock_list)
+    """
+    non_zero_inventory = []
+    zero_stock_list = []
+    
+    for sku, qty in inventory:
+        if qty == 0:
+            zero_stock_list.append(sku)
+        else:
+            non_zero_inventory.append((sku, qty))
+    
+    if zero_stock_list:
+        print(f"⚠️  Zero stock SKUs: {zero_stock_list}")
+    else:
+        print("✓ No zero stock items found.")
+    
+    return non_zero_inventory, zero_stock_list
+
+def reorganize_inventory(inventory):
+    """
+    Reorganize inventory by moving all zero stock items to the end.
+    
+    Args:
+    inventory (list of tuples): [(SKU, quantity), ...]
+    Returns:
+    reorganized_inventory (list of tuples) with zero stock items at the end
+    """
+    non_zero_items = []
+    zero_items = []
+    
+    for item in inventory:
+        sku, qty = item
+        if qty == 0:
+            zero_items.append(item)
+        else:
+            non_zero_items.append(item)
+    
+    return non_zero_items + zero_items
+
+def display_inventory(inventory):
+    print("\n" + "="*40)
+    print("CURRENT INVENTORY")
+    print("="*40)
+    print(f"{'SKU':<10} {'Quantity':<10} {'Status':<15}")
+    print("-"*40)
+    
+    for sku, qty in inventory:
+        status = "Out of Stock" if qty == 0 else "In Stock"
+        print(f"{sku:<10} {qty:<10} {status:<15}")
+    
+    print("="*40)
+
+def add_new_item(inventory):
+    print("\n--- Add New Item ---")
+    try:
+        sku = int(input("Enter SKU number: "))
+        quantity = int(input("Enter initial quantity: "))
+        
+        # Check if SKU already exists
+        for existing_sku, _ in inventory:
+            if existing_sku == sku:
+                print(f"✗ SKU {sku} already exists in inventory!")
+                return inventory
+        
+        inventory.append((sku, quantity))
+        print(f"✓ Added new item: SKU {sku} with quantity {quantity}")
+        return inventory
+        
+    except ValueError:
+        print("✗ Invalid input! Please enter numbers only.")
+        return inventory
+
+def manual_sale_entry(inventory):
+    """Allow user to manually enter sales."""
+    print("\n--- Process Sale ---")
+    try:
+        sku = int(input("Enter SKU to sell: "))
+        quantity = int(input("Enter quantity sold: "))
+        
+        if quantity <= 0:
+            print("✗ Quantity must be positive!")
+            return inventory
+            
+        return process_sale(inventory, sku, quantity)
+        
+    except ValueError:
+        print("✗ Invalid input! Please enter numbers only.")
+        return inventory
+
+def initialize_inventory():
+    """Allow user to set up initial inventory."""
+    inventory = []
+    print("=== INVENTORY SETUP ===")
+    print("Enter your initial inventory items.")
+    print("Enter 'done' when finished or leave SKU empty to use sample data.")
+    
+    while True:
+        try:
+            sku_input = input("\nEnter SKU (or 'done' to finish): ").strip()
+            
+            if sku_input.lower() == 'done':
+                break
+            if sku_input == '':
+                print("Using sample inventory data...")
+                return [(101, 50), (102, 20), (103, 0), (104, 15)]
+            
+            sku = int(sku_input)
+            quantity = int(input("Enter quantity: "))
+            
+            inventory.append((sku, quantity))
+            print(f"Added SKU {sku} with quantity {quantity}")
+            
+        except ValueError:
+            print("✗ Invalid input! Please enter numbers only.")
+    
+    return inventory
+
+def main_menu():
+    """Main menu for user interaction."""
+    print("=== INVENTORY MANAGEMENT SYSTEM ===")
+    inventory = initialize_inventory()
+    
+    while True:
+        print("\n" + "="*50)
+        print("MAIN MENU")
+        print("="*50)
+        print("1. View Current Inventory")
+        print("2. Process a Sale")
+        print("3. Add New Item")
+        print("4. Check Zero Stock Items")
+        print("5. Reorganize Inventory (Move Zero Stock to End)")
+        print("6. Exit")
+        print("="*50)
+        
+        choice = input("Enter your choice (1-6): ").strip()
+        
+        if choice == '1':
+            display_inventory(inventory)
+            
+        elif choice == '2':
+            inventory = manual_sale_entry(inventory)
+            
+        elif choice == '3':
+            inventory = add_new_item(inventory)
+            
+        elif choice == '4':
+            non_zero_inv, zero_stock = identify_zero_stock(inventory)
+            if zero_stock:
+                print(f"Total zero stock items: {len(zero_stock)}")
+            
+        elif choice == '5':
+            inventory = reorganize_inventory(inventory)
+            print("✓ Inventory reorganized - zero stock items moved to end")
+            
+        elif choice == '6':
+            print("Thank you for using the Inventory Management System!")
+            display_inventory(inventory)
+            break
+            
+        else:
+            print("✗ Invalid choice! Please enter 1-6.")
+
+# --- Run the program ---
+if __name__ == "__main__":
+    main_menu()
